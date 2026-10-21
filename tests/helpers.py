@@ -35,3 +35,9 @@ def make_customer(conn, username="sari"):
 
 def make_item(conn, name="Geprek", price="18000", description=""):
     return menu_service.add_item(conn, name, price, description)
+
+
+def make_po(conn, owner_id, quota=10, deadline=DEADLINE, payment_info="", now=NOW):
+    return po_service.create_session(
+        conn, owner_id, "PO Test", str(quota), deadline.isoformat(timespec="minutes"), payment_info, now=now
+    )
