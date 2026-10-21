@@ -31,3 +31,7 @@ def make_owner(conn, username="owner"):
 
 def make_customer(conn, username="sari"):
     return make_user(conn, username, rules.ROLE_CUSTOMER)
+
+
+def make_item(conn, name="Geprek", price="18000", description=""):
+    return menu_service.add_item(conn, name, price, description)
