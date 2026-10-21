@@ -60,4 +60,4 @@ def place_order(conn, po_id, customer_id, quantities_raw, note_raw, now=None):
         if now < datetime.fromisoformat(po["deadline"]):
             return _insert_order(conn, po, customer_id, quantities, note, now)
         po_repo.set_status(conn, po_id, rules.PO_CLOSED)
-        raise DeadlineError("The deadline has passed, so this PO is now closed.")
+    raise DeadlineError("The deadline has passed, so this PO is now closed.")
