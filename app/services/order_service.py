@@ -61,3 +61,62 @@ def place_order(conn, po_id, customer_id, quantities_raw, note_raw, now=None):
             return _insert_order(conn, po, customer_id, quantities, note, now)
         po_repo.set_status(conn, po_id, rules.PO_CLOSED)
     raise DeadlineError("The deadline has passed, so this PO is now closed.")
+
+
+def confirm_payment(conn, order_id, customer_id, method_raw, now=None):
+    now = now or datetime.now()
+    method = validation.parse_payment_method(method_raw)
+    with write_transaction(conn):
+        order = _get_order(conn, order_id)
+        if order["customer_id"] != customer_id:
+            raise NotFoundError("Order not found.")
+        if order["status"] != rules.ORDER_PENDING:
+            raise InvalidTransitionError("Only an order that is waiting for payment can be confirmed.")
+        if order["paid_claimed_at"] is not None:
+            raise InvalidTransitionError(
+                "You already confirmed this payment. Please wait for the seller to verify it."
+            )
+        orders_repo.mark_payment_claimed(conn, order_id, method, _iso(now))
+
+
+def verify_payment(conn, order_id, owner_id, now=None):
+    now = now or datetime.now()
+    with write_transaction(conn):
+        order = _get_order(conn, order_id)
+        if order["status"] == rules.ORDER_PAID:
+            raise InvalidTransitionError("This order is already marked as paid.")
+        if order["status"] == rules.ORDER_CANCELLED:
+            raise InvalidTransitionError("A cancelled order can not be marked as paid.")
+        orders_repo.mark_paid(conn, order_id, owner_id, _iso(now))
+
+
+def void_order(conn, order_id, owner_id, now=None):
+    now = now or datetime.now()
+    with write_transaction(conn):
+        order = _get_order(conn, order_id)
+        if order["status"] == rules.ORDER_CANCELLED:
+            raise InvalidTransitionError("This order is already cancelled.")
+        orders_repo.mark_cancelled(conn, order_id, owner_id, _iso(now))
+
+
+def get_order_for_customer(conn, order_id, customer_id):
+    order = _get_order(conn, order_id)
+    if order["customer_id"] != customer_id:
+        raise NotFoundError("Order not found.")
+    return {"order": order, "items": orders_repo.items(conn, order_id)}
+
+
+def get_order_detail(conn, order_id):
+    order = _get_order(conn, order_id)
+    return {"order": order, "items": orders_repo.items(conn, order_id)}
+
+
+def list_orders_for_customer(conn, customer_id):
+    return orders_repo.list_for_customer(conn, customer_id)
+
+
+def list_orders_for_session(conn, po_id):
+    return [
+        {"order": order, "items": orders_repo.items(conn, order["id"])}
+        for order in orders_repo.list_for_session(conn, po_id)
+    ]
