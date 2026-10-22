@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_ui.html" import quota_meter, po_badge, icon_chip %}
+{% block title %}Open POs{% endblock %}
+{% block content %}
+<div class="page-header"><div>
+  <p class="eyebrow">Fresh from local kitchens</p>
+  <h1>Open POs</h1>
+  <p class="lead">Order today, enjoy something delicious later.</p>
+</div></div>
+{% if sessions %}
+<div class="po-grid">
+  {% for po in sessions %}
+  <article class="card po-card">
+    <div class="title-line"><h2><a href="{{ url_for('shop.po_detail', po_id=po.id) }}">{{ po.name }}</a></h2>{{ po_badge(po.status) }}</div>
+    <p class="deadline">{{ icon_chip('deadline') }}<span>Order before {{ po.deadline|dt }}</span></p>
+    {{ quota_meter(po) }}
+    <a class="card-link" href="{{ url_for('shop.po_detail', po_id=po.id) }}">See menu &rarr;</a>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty"><p>No PO is open right now. Check again later.</p></div>
+{% endif %}
+{% endblock %}

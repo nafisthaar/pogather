@@ -12,6 +12,12 @@
 <header class="site-header">
   <a class="brand" href="{{ url_for('auth.home') }}"><span class="brand-mark" aria-hidden="true"></span>POGather</a>
   {% if user %}
+  <nav class="site-nav" aria-label="Main">
+    {% if user.role != 'owner' %}
+    <a href="{{ url_for('shop.po_list') }}"{% if endpoint in ('shop.po_list', 'shop.po_detail', 'shop.place_order') %} class="active" aria-current="page"{% endif %}>Open POs</a>
+    <a href="{{ url_for('shop.my_orders') }}"{% if endpoint in ('shop.my_orders', 'shop.order_detail', 'shop.confirm_payment') %} class="active" aria-current="page"{% endif %}>My orders</a>
+    {% endif %}
+  </nav>
   <div class="account">
     <span><strong>{{ user.full_name }}</strong><small>{{ user.role|capitalize }}</small></span>
     <form method="post" action="{{ url_for('auth.logout') }}">

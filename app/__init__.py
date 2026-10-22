@@ -8,7 +8,7 @@ from .config import load_secret_key
 from .db import connect, init_schema
 from .errors import NotFoundError
 from .formatting import format_datetime, format_rupiah
-from .routes import auth
+from .routes import auth, shop
 from .routes.common import check_csrf, close_db, csrf_token, load_user
 
 
@@ -37,7 +37,7 @@ def create_app(test_config=None):
     app.jinja_env.filters["dt"] = format_datetime
     app.jinja_env.globals["PAYMENT_LABELS"] = rules.PAYMENT_LABELS
     app.context_processor(lambda: {"csrf_token": csrf_token, "user": g.get("user")})
-    for blueprint in (auth.bp,):
+    for blueprint in (auth.bp, shop.bp):
         app.register_blueprint(blueprint)
     _register_error_pages(app)
     return app
