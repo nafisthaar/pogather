@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit PO' if po else 'New PO' }}{% endblock %}
+{% block content %}
+<div class="page-header"><div><p class="eyebrow">PO sessions</p><h1>{{ 'Edit PO' if po else 'New PO' }}</h1></div></div>
+<form method="post" class="panel form form-narrow">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label class="field">PO name <input name="name" maxlength="80" required value="{{ form.get('name', po.name if po else '') }}"></label>
+  <div class="form-grid">
+    <label class="field">Quota <small>Total portions you can make, across all menu items</small>
+      <input name="quota" type="number" min="1" max="5000" inputmode="numeric" required value="{{ form.get('quota', po.quota if po else '') }}"></label>
+    <label class="field">Deadline <small>Orders stop at this date and time</small>
+      <input name="deadline" type="datetime-local" required {% if not po %}min="{{ min_deadline }}"{% endif %}
+             value="{{ form.get('deadline', po.deadline[:16] if po else '') }}"></label>
+  </div>
+  <label class="field">Payment info <small>Shown to customers after they order, for example your bank account or e-wallet number</small>
+    <textarea name="payment_info" rows="4" maxlength="300">{{ form.get('payment_info', (po.payment_info or '') if po else '') }}</textarea></label>
+  <div class="actions">
+    <button class="button" type="submit">Save PO</button>
+    <a class="button secondary" href="{{ url_for('owner.po_detail', po_id=po.id) if po else url_for('owner.dashboard') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

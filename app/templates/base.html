@@ -13,7 +13,11 @@
   <a class="brand" href="{{ url_for('auth.home') }}"><span class="brand-mark" aria-hidden="true"></span>POGather</a>
   {% if user %}
   <nav class="site-nav" aria-label="Main">
-    {% if user.role != 'owner' %}
+    {% if user.role == 'owner' %}
+    {% set on_menu = endpoint.startswith('owner.menu') %}
+    <a href="{{ url_for('owner.dashboard') }}"{% if endpoint.startswith('owner.') and not on_menu %} class="active" aria-current="page"{% endif %}>PO sessions</a>
+    <a href="{{ url_for('owner.menu_list') }}"{% if on_menu %} class="active" aria-current="page"{% endif %}>Menu</a>
+    {% else %}
     <a href="{{ url_for('shop.po_list') }}"{% if endpoint in ('shop.po_list', 'shop.po_detail', 'shop.place_order') %} class="active" aria-current="page"{% endif %}>Open POs</a>
     <a href="{{ url_for('shop.my_orders') }}"{% if endpoint in ('shop.my_orders', 'shop.order_detail', 'shop.confirm_payment') %} class="active" aria-current="page"{% endif %}>My orders</a>
     {% endif %}

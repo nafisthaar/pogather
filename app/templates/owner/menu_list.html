@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "_ui.html" import icon_chip %}
+{% block title %}Menu{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="header-with-chip">
+    {{ icon_chip('menu') }}
+    <div><p class="eyebrow">Seller workspace</p><h1>Menu</h1></div>
+  </div>
+</div>
+<p class="lead">Every open PO offers the items marked as available. Prices are copied into an order when it is placed, so changing a price later does not touch old orders.</p>
+<div class="table-wrap space-top">
+  <table>
+    <thead><tr><th>Item</th><th class="number">Price</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td><strong>{{ item.name }}</strong>{% if item.description %}<small>{{ item.description }}</small>{% endif %}</td>
+        <td class="number">{{ item.price|rupiah }}</td>
+        <td><span class="badge {{ 'available' if item.is_active else 'hidden' }}">{{ 'Available' if item.is_active else 'Hidden' }}</span></td>
+        <td class="number"><a class="text-link" href="{{ url_for('owner.menu_edit', item_id=item.id) }}">Edit</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" class="empty-cell">No menu items yet. Add your first one below.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<section class="panel section">
+  <h2>Add menu item</h2>
+  <form method="post" class="form space-top">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-grid">
+      <label class="field">Name <input name="name" maxlength="60" required value="{{ form.get('name', '') }}"></label>
+      <label class="field">Price (Rp) <input name="price" inputmode="numeric" required value="{{ form.get('price', '') }}"></label>
+    </div>
+    <label class="field">Description <small>Optional</small><textarea name="description" rows="3" maxlength="200">{{ form.get('description', '') }}</textarea></label>
+    <div><button class="button" type="submit">Add item</button></div>
+  </form>
+</section>
+{% endblock %}
