@@ -2,7 +2,7 @@ from datetime import datetime
 
 from flask import Blueprint, flash, g, redirect, render_template, request, url_for
 
-from ..services import menu_service, po_service
+from ..services import menu_service, order_service, po_service, recap_service
 from .common import attempt, get_db, owner_required
 
 bp = Blueprint("owner", __name__, url_prefix="/admin")
@@ -74,6 +74,37 @@ def po_status(po_id):
     _, error = attempt(lambda: po_service.set_status(get_db(), po_id, request.form.get("status")))
     flash(error or "PO status updated.", "error" if error else "ok")
     return redirect(url_for("owner.po_detail", po_id=po_id))
+
+
+@bp.get("/po/<int:po_id>")
+@owner_required
+def po_detail(po_id):
+    db = get_db()
+    return render_template(
+        "owner/po_detail.html",
+        recap=recap_service.po_recap(db, po_id),
+        orders=order_service.list_orders_for_session(db, po_id),
+    )
+
+
+def _change_order(action, ok_message, order_id):
+    db = get_db()
+    po_id = order_service.get_order_detail(db, order_id)["order"]["po_session_id"]
+    _, error = attempt(lambda: action(db, order_id, g.user["id"]))
+    flash(error or ok_message, "error" if error else "ok")
+    return redirect(url_for("owner.po_detail", po_id=po_id))
+
+
+@bp.post("/orders/<int:order_id>/verify")
+@owner_required
+def verify_order(order_id):
+    return _change_order(order_service.verify_payment, "Payment verified. The order is paid.", order_id)
+
+
+@bp.post("/orders/<int:order_id>/void")
+@owner_required
+def void_order(order_id):
+    return _change_order(order_service.void_order, "Order cancelled. The portions are back in the quota.", order_id)
 
 
 @bp.route("/menu", methods=["GET", "POST"])

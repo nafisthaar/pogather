@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% from "_ui.html" import quota_meter, po_badge, status_badge, icon_chip %}
+{% set po = recap.session %}
+{% block title %}{{ po.name }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('owner.dashboard') }}">&larr; PO sessions</a>
+<section class="hero">
+  <div class="hero-head">
+    <div>
+      <p class="eyebrow">Deadline {{ po.deadline|dt }}</p>
+      <div class="title-line"><h1>{{ po.name }}</h1>{{ po_badge(po.status) }}</div>
+    </div>
+    <div class="actions">
+      <a class="button secondary" href="{{ url_for('owner.po_edit', po_id=po.id) }}">Edit PO</a>
+      <form method="post" action="{{ url_for('owner.po_status', po_id=po.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if po.status == 'OPEN' %}
+        <input type="hidden" name="status" value="CLOSED"><button class="button danger" type="submit">Close PO</button>
+        {% else %}
+        <input type="hidden" name="status" value="OPEN"><button class="button secondary" type="submit">Reopen PO</button>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+  {{ quota_meter(po) }}
+</section>
+
+<section class="section">
+  <div class="section-title"><p class="eyebrow">At a glance</p><h2>Recap</h2></div>
+  <div class="stats">
+    <article class="card stat">{{ icon_chip('revenue') }}<p>Revenue paid</p><strong>{{ recap.revenue_paid|rupiah }}</strong></article>
+    <article class="card stat">{{ icon_chip('waiting') }}<p>Waiting for verification</p><strong>{{ recap.revenue_pending|rupiah }}</strong></article>
+    <article class="card stat">{{ icon_chip('portions') }}<p>Portions ordered</p><strong>{{ recap.total_portions }}</strong></article>
+  </div>
+  <p class="summary-line">Orders: {{ recap.by_status.PAID.orders }} paid, {{ recap.by_status.PENDING_PAYMENT.orders }} waiting for payment, {{ recap.by_status.CANCELLED.orders }} cancelled. Cancelled orders are not counted in portions or revenue.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Menu item</th><th class="number">Portions</th><th class="number">Amount</th></tr></thead>
+      <tbody>
+        {% for row in recap.per_menu %}
+        <tr><td>{{ row.item_name }}</td><td class="number">{{ row.portions }}</td><td class="number">{{ row.amount|rupiah }}</td></tr>
+        {% else %}
+        <tr><td colspan="3" class="empty-cell">No orders yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-title"><p class="eyebrow">{{ orders|length }} total</p><h2>Orders</h2></div>
+  {% for entry in orders %}
+  {% set o = entry.order %}
+  <article class="card seller-order">
+    <div class="order-head">
+      <div><h3>#{{ o.id }} {{ o.customer_name }}</h3><p class="muted">{{ o.customer_phone or 'No phone number' }}</p></div>
+      {{ status_badge(o.status) }}
+    </div>
+    <div class="item-lines">
+      <ul class="lines">
+        {% for line in entry["items"] %}<li>{{ line.quantity }} x {{ line.item_name }}</li>{% endfor %}
+      </ul>
+      {% if o.note %}<p class="muted">Note: {{ o.note }}</p>{% endif %}
+    </div>
+    <p class="order-total">{{ o.total|rupiah }}</p>
+    {% if o.status == 'PENDING_PAYMENT' %}
+      {% if o.paid_claimed_at %}
+      <div class="payment-callout">Customer says they paid by {{ PAYMENT_LABELS[o.payment_method] }} on {{ o.paid_claimed_at|dt }}.</div>
+      {% else %}
+      <p class="muted">The customer has not confirmed a payment yet.</p>
+      {% endif %}
+    {% endif %}
+    <div class="actions">
+      {% if o.status == 'PENDING_PAYMENT' %}
+      <form method="post" action="{{ url_for('owner.verify_order', order_id=o.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button" type="submit">Verify payment</button></form>
+      {% endif %}
+      {% if o.status != 'CANCELLED' %}
+      <form method="post" action="{{ url_for('owner.void_order', order_id=o.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="button danger" type="submit" onclick="return confirm('Void this order? The portions go back to the quota.')">Void order</button></form>
+      {% endif %}
+    </div>
+  </article>
+  {% else %}
+  <div class="empty"><p>No orders yet. Customers can order while the PO is open.</p></div>
+  {% endfor %}
+</section>
+{% endblock %}
