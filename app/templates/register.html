@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_ui.html" import flash_messages %}
+{% block title %}Create account{% endblock %}
+{% block flashes %}{% endblock %}
+{% block content %}
+<section class="panel form-centered">
+  <div class="page-header"><div><p class="eyebrow">Join POGather</p><h1>Create a customer account</h1></div></div>
+  {{ flash_messages() }}
+  <form method="post" class="form space-top">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label class="field">Full name <input name="full_name" value="{{ form.get('full_name', '') }}" maxlength="60" required autofocus></label>
+    <label class="field">Username <small>3-30 characters: a-z, 0-9 or underscore</small>
+      <input name="username" value="{{ form.get('username', '') }}" autocomplete="username" required></label>
+    <label class="field">Phone <small>Optional. The seller uses it to reach you about your order.</small>
+      <input name="phone" value="{{ form.get('phone', '') }}" inputmode="tel"></label>
+    <label class="field">Password <small>At least 8 characters</small>
+      <input type="password" name="password" autocomplete="new-password" required></label>
+    <button class="button" type="submit">Create account</button>
+  </form>
+  <p class="muted space-top">Already have an account? <a class="text-link" href="{{ url_for('auth.login') }}">Log in</a>.</p>
+</section>
+{% endblock %}
