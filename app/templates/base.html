@@ -1,0 +1,39 @@
+{%- from "_ui.html" import flash_messages -%}
+{%- set endpoint = request.endpoint or '' -%}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% endblock %} - POGather</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="{{ url_for('auth.home') }}"><span class="brand-mark" aria-hidden="true"></span>POGather</a>
+  {% if user %}
+  <nav class="site-nav" aria-label="Main">
+    {% if user.role == 'owner' %}
+    {% set on_menu = endpoint.startswith('owner.menu') %}
+    <a href="{{ url_for('owner.dashboard') }}"{% if endpoint.startswith('owner.') and not on_menu %} class="active" aria-current="page"{% endif %}>PO sessions</a>
+    <a href="{{ url_for('owner.menu_list') }}"{% if on_menu %} class="active" aria-current="page"{% endif %}>Menu</a>
+    {% else %}
+    <a href="{{ url_for('shop.po_list') }}"{% if endpoint in ('shop.po_list', 'shop.po_detail', 'shop.place_order') %} class="active" aria-current="page"{% endif %}>Open POs</a>
+    <a href="{{ url_for('shop.my_orders') }}"{% if endpoint in ('shop.my_orders', 'shop.order_detail', 'shop.confirm_payment') %} class="active" aria-current="page"{% endif %}>My orders</a>
+    {% endif %}
+  </nav>
+  <div class="account">
+    <span><strong>{{ user.full_name }}</strong><small>{{ user.role|capitalize }}</small></span>
+    <form method="post" action="{{ url_for('auth.logout') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="button secondary" type="submit">Log out</button>
+    </form>
+  </div>
+  {% endif %}
+</header>
+<main class="screen">
+  {% block flashes %}{{ flash_messages() }}{% endblock %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Edit menu item{% endblock %}
+{% block content %}
+<div class="page-header"><div><p class="eyebrow">Menu</p><h1>Edit menu item</h1></div></div>
+<form method="post" class="panel form form-narrow">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label class="field">Name <input name="name" maxlength="60" required value="{{ form.get('name', item.name) }}"></label>
+  <label class="field">Price (Rp) <input name="price" inputmode="numeric" required value="{{ form.get('price', item.price) }}"></label>
+  <label class="field">Description <small>Optional</small><textarea name="description" rows="4" maxlength="200">{{ form.get('description', item.description or '') }}</textarea></label>
+  <label class="checkbox"><input type="checkbox" name="is_active" {% if form %}{% if form.get('is_active') %}checked{% endif %}{% elif item.is_active %}checked{% endif %}><span><strong>Available in open POs</strong><br><small class="muted">Customers can add this item to new orders.</small></span></label>
+  <div class="actions">
+    <button class="button" type="submit">Save item</button>
+    <a class="button secondary" href="{{ url_for('owner.menu_list') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_ui.html" import status_badge %}
+{% block title %}My orders{% endblock %}
+{% block content %}
+<div class="page-header"><div>
+  <h1>My orders</h1>
+  <p class="lead">Track payments and order status in one place.</p>
+</div></div>
+{% if orders %}
+<div class="list">
+  {% for order in orders %}
+  <a class="list-row" href="{{ url_for('shop.order_detail', order_id=order.id) }}">
+    <span class="list-row-main">
+      <span class="list-row-title"><strong>Order #{{ order.id }}</strong>{{ status_badge(order.status) }}</span>
+      <small>{{ order.po_name }}, {{ order.portions }} portion(s), {{ order.total|rupiah }}</small>
+    </span>
+    <span aria-hidden="true">&rarr;</span>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty"><p>You have not ordered anything yet. <a class="text-link" href="{{ url_for('shop.po_list') }}">See the open POs</a>.</p></div>
+{% endif %}
+{% endblock %}

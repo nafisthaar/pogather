@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "_ui.html" import status_badge %}
+{% block title %}Order #{{ order.id }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('shop.my_orders') }}">&larr; My orders</a>
+<div class="page-header">
+  <div>
+    <h1>Order #{{ order.id }}</h1>
+    <p class="muted">{{ order.po_name }}, placed {{ order.created_at|dt }}</p>
+  </div>
+  {{ status_badge(order.status) }}
+</div>
+
+<div class="detail-grid">
+  <section class="panel">
+    <h2>Order summary</h2>
+    <div class="table-wrap space-top">
+      <table>
+        <thead><tr><th>Item</th><th class="number">Qty</th><th class="number responsive-hide">Price</th><th class="number">Subtotal</th></tr></thead>
+        <tbody>
+          {% for line in items %}
+          <tr><td>{{ line.item_name }}</td><td class="number">{{ line.quantity }}</td>
+              <td class="number responsive-hide">{{ line.unit_price|rupiah }}</td><td class="number">{{ (line.unit_price * line.quantity)|rupiah }}</td></tr>
+          {% endfor %}
+        </tbody>
+        <tfoot><tr><td colspan="2"><strong>Total</strong></td><td class="responsive-hide"></td><td class="number"><strong>{{ order.total|rupiah }}</strong></td></tr></tfoot>
+      </table>
+    </div>
+    {% if order.note %}<p class="lead">Your note: {{ order.note }}</p>{% endif %}
+  </section>
+
+  {% if order.status == 'PENDING_PAYMENT' and not order.paid_claimed_at %}
+  <aside class="panel">
+    <h2>Pay {{ order.total|rupiah }}</h2>
+    <div class="payment-box">{{ order.payment_info or 'Ask the seller where to send the payment.' }}</div>
+    <form method="post" action="{{ url_for('shop.confirm_payment', order_id=order.id) }}" class="form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <fieldset>
+        <legend>How did you pay?</legend>
+        {% for code, label in PAYMENT_LABELS.items() %}
+        <label class="radio"><input type="radio" name="payment_method" value="{{ code }}" required>{{ label }}</label>
+        {% endfor %}
+      </fieldset>
+      <button class="button full" type="submit">I have paid</button>
+    </form>
+  </aside>
+  {% elif order.status == 'PENDING_PAYMENT' %}
+  <aside class="panel status-panel">
+    <div class="alert warning" role="status"><p>You said you paid by {{ PAYMENT_LABELS[order.payment_method] }} on {{ order.paid_claimed_at|dt }}. The seller will check it.</p></div>
+  </aside>
+  {% elif order.status == 'PAID' %}
+  <aside class="panel status-panel">
+    <div class="alert success" role="status"><p>The seller verified your payment. Nothing else to do.</p></div>
+  </aside>
+  {% else %}
+  <aside class="panel status-panel">
+    <div class="alert error" role="status"><p>The seller cancelled this order. Your portions went back to the PO.</p></div>
+  </aside>
+  {% endif %}
+</div>
+{% endblock %}

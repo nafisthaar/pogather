@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_ui.html" import flash_messages %}
+{% block title %}Log in{% endblock %}
+{% block flashes %}{% endblock %}
+{% block content %}
+<div class="auth-layout">
+  <section class="auth-intro">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <h2>Good food starts with a well-run pre-order.</h2>
+    <p class="muted">Simple orders, clear payments, happier customers.</p>
+  </section>
+  <section class="auth-card">
+    <p class="eyebrow">Welcome back</p>
+    <h1>Log in</h1>
+    <p class="lead">Continue to your orders and delicious finds.</p>
+    {{ flash_messages() }}
+    <form method="post" class="form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label class="field">Username <input name="username" autocomplete="username" required autofocus></label>
+      <label class="field">Password <input type="password" name="password" autocomplete="current-password" required></label>
+      <button class="button full" type="submit">Log in</button>
+    </form>
+    <p class="muted center">New here? <a class="text-link" href="{{ url_for('auth.register') }}">Create a customer account</a>.</p>
+  </section>
+</div>
+{% endblock %}
