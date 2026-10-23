@@ -3,7 +3,7 @@ import os
 from flask import Flask, g, render_template
 from werkzeug.exceptions import HTTPException
 
-from . import rules
+from . import cli, rules
 from .config import load_secret_key
 from .db import connect, init_schema
 from .errors import NotFoundError
@@ -40,6 +40,7 @@ def create_app(test_config=None):
     for blueprint in (auth.bp, shop.bp, owner.bp):
         app.register_blueprint(blueprint)
     _register_error_pages(app)
+    cli.register(app)
     return app
 
 
